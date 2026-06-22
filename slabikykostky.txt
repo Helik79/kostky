@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hravé kostky - Slabiky pro prvňáčky</title>
+    <style>
+        /* Veselé barevné pozadí s přechodem */
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-content: center;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial', sans-serif;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        /* Kontejner pro kostky */
+        .dice-container {
+            display: flex;
+            gap: 100px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 50px;
+            perspective: 1000px; /* Důležité pro 3D efekt */
+        }
+
+        /* Společný styl pro kostky */
+        .cube {
+            width: 150px;
+            height: 150px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        .face {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 4px solid #fff;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            font-weight: bold;
+            color: white;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1), 0 5px 15px rgba(0,0,0,0.2);
+            backface-visibility: hidden;
+        }
+
+        /* Levá kostka (Souhlásky) - Modré tóny */
+        #cube1 .face { background: #4ba3e3; border-color: #2575fc; }
+        
+        /* Pravá kostka (Samohlásky) - Oranžovo-červené tóny */
+        #cube2 .face { background: #ff7675; border-color: #d63031; }
+
+        /* Pozicování stěn v 3D prostoru */
+        .face.front  { transform: rotateY(0deg) translateZ(75px); }
+        .face.back   { transform: rotateY(180deg) translateZ(75px); }
+        .face.top    { transform: rotateX(90deg) translateZ(75px); }
+        .face.bottom { transform: rotateX(-90deg) translateZ(75px); }
+        .face.left   { transform: rotateY(-90deg) translateZ(75px); }
+        .face.right  { transform: rotateY(90deg) translateZ(75px); }
+
+        /* Velké lákavé tlačítko */
+        .roll-btn {
+            padding: 15px 40px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(to right, #11998e, #38ef7d);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.1s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+
+        .roll-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 7px 20px rgba(0,0,0,0.3);
+        }
+
+        .roll-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Roztoč kostky a přečti slabiku!</h1>
+
+    <div class="dice-container">
+        <div class="cube" id="cube1">
+            <div class="face front">M</div>
+            <div class="face back">S</div>
+            <div class="face top">L</div>
+            <div class="face bottom">P</div>
+            <div class="face left">M</div> <div class="face right">S</div>
+        </div>
+
+        <div class="cube" id="cube2">
+            <div class="face front">A</div>
+            <div class="face back">Á</div>
+            <div class="face top">E</div>
+            <div class="face bottom">É</div>
+            <div class="face left">I</div>
+            <div class="face right">Í</div>
+        </div>
+    </div>
+
+    <button class="roll-btn" onclick="rollDice()">HODIT KOSTKAMI</button>
+
+    <script>
+        // Definice písmen pro rotaci
+        const consonants = ['M', 'S', 'L', 'P', 'M', 'S']; // 6 stěn
+        const vowels = ['A', 'Á', 'E', 'É', 'I', 'Í', 'O', 'Ó', 'U', 'Ů'];
+
+        // Definice 3D rotací pro jednotlivé stěny (indexy 0 až 5)
+        const rotations = [
+            { x: 0, y: 0 },       // přední
+            { x: 0, y: 180 },     // zadní
+            { x: -90, y: 0 },     // horní
+            { x: 90, y: 0 },      // dolní
+            { x: 0, y: 90 },      // levá
+            { x: 0, y: -90 }      // pravá
+        ];
+
+        function rollDice() {
+            const cube1 = document.getElementById('cube1');
+            const cube2 = document.getElementById('cube2');
+
+            // Vybereme náhodnou stěnu (0-5)
+            const side1 = Math.floor(Math.random() * 6);
+            const side2 = Math.floor(Math.random() * 6);
+
+            // Dynamicky změníme písmena na pravé kostce, aby se vystřídalo všech 10 samohlásek
+            const cube2Faces = cube2.getElementsByClassName('face');
+            // Zamícháme samohlásky a přiřadíme je stěnám před otočením
+            const shuffledVowels = [...vowels].sort(() => 0.5 - Math.random());
+            for(let i = 0; i < 6; i++) {
+                cube2Faces[i].innerText = shuffledVowels[i];
+            }
+
+            // Přidáme extra otočky (360° * 2), aby animace vypadala jako opravdové točení
+            const extraTurnsX1 = (Math.floor(Math.random() * 3) + 2) * 360;
+            const extraTurnsY1 = (Math.floor(Math.random() * 3) + 2) * 360;
+            const extraTurnsX2 = (Math.floor(Math.random() * 3) + 2) * 360;
+            const extraTurnsY2 = (Math.floor(Math.random() * 3) + 2) * 360;
+
+            // Aplikujeme rotaci
+            cube1.style.transform = `rotateX(${rotations[side1].x + extraTurnsX1}deg) rotateY(${rotations[side1].y + extraTurnsY1}deg)`;
+            cube2.style.transform = `rotateX(${rotations[side2].x + extraTurnsX2}deg) rotateY(${rotations[side2].y + extraTurnsY2}deg)`;
+        }
+
+        // První automatické hození po načtení stránky
+        window.onload = rollDice;
+    </script>
+</body>
+</html>
